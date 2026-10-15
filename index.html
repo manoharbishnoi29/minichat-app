@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniChat</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:#ece5dd}
+.hide{display:none!important}
+.screen{display:flex;flex-direction:column;height:100dvh;max-width:600px;margin:0 auto;background:#fff}
+#login{justify-content:center;padding:24px;gap:10px}
+input{padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px}
+button{padding:12px 16px;border:0;border-radius:8px;background:#075e54;color:#fff;font-size:16px}
+button.alt{background:#fff;color:#075e54;border:1px solid #075e54}
+#err{color:#c00}
+header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#075e54;color:#fff}
+header b{flex:1}
+header button{background:none;padding:4px 8px}
+#list{overflow:auto;flex:1}
+.user{padding:16px;border-bottom:1px solid #eee}
+.empty{padding:16px;color:#666}
+#msgs{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:6px;background:#ece5dd}
+.msg{max-width:78%;padding:8px 12px;border-radius:10px;word-wrap:break-word}
+.mine{align-self:flex-end;background:#dcf8c6}
+.theirs{align-self:flex-start;background:#fff}
+.bar{display:flex;gap:8px;padding:8px;background:#f0f0f0}
+.bar input{flex:1}
+#banned{padding:24px;justify-content:center}
+</style>
+</head>
+<body>
+
+<div id="login" class="screen">
+  <h1>MiniChat</h1>
+  <input id="name" placeholder="Naam (sirf signup ke liye)">
+  <input id="email" type="email" placeholder="Email">
+  <input id="pass" type="password" placeholder="Password (kam se kam 6 akshar)">
+  <button id="login-btn">Login</button>
+  <button id="signup" class="alt">Signup</button>
+  <p id="err"></p>
+</div>
+
+<div id="users" class="screen hide">
+  <header><b>Chats</b><button class="lo">Logout</button></header>
+  <div id="list"></div>
+</div>
+
+<div id="chat" class="screen hide">
+  <header><button id="back">←</button><b id="peername"></b></header>
+  <div id="msgs"></div>
+  <div class="bar"><input id="text" placeholder="Message"><button id="send">Send</button></div>
+</div>
+
+<div id="banned" class="screen hide">
+  <p>Aapka account block kar diya gaya hai.</p>
+  <button class="lo">Logout</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwX7QKbhX_b_H2T69lSsp79w-3y0lS7HM",
+  authDomain: "minichat-898cd.firebaseapp.com",
+  projectId: "minichat-898cd",
+  storageBucket: "minichat-898cd.firebasestorage.app",
+  messagingSenderId: "500528822656",
+  appId: "1:500528822656:web:033b02144a983defe66965"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
+
+let me = null, peer = null, banned = false;
+let unsubUsers = null, unsubMsgs = null, unsubMe = null;
+
+function show(id){
+  ["login","users","chat","banned"].forEach(s => $(s).classList.toggle("hide", s !== id));
+}
+function cleanup(){
+  [unsubUsers, unsubMsgs, unsubMe].forEach(u => u && u());
+  unsubUsers = unsubMsgs = unsubMe = null;
+  peer = null; banned = false;
+}
+
+$("login-btn").onclick = async () => {
+  try { await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value); }
+  catch(e){ $("err").textContent = e.message; }
+};
+
+$("signup").onclick = async () => {
+  try {
+    const email = $("email").value.trim();
+    const name = $("name").value.trim();
+    const r = await createUserWithEmailAndPassword(auth, email, $("pass").value);
+    await setDoc(doc(db, "users", r.user.uid),
+      { uid: r.user.uid, name: name || email, email, banned: false });
+  } catch(e){ $("err").textContent = e.message; }
+};
+
+document.querySelectorAll(".lo").forEach(b => b.onclick = () => signOut(auth));
+
+onAuthStateChanged(auth, user => {
+  cleanup();
+  me = user;
+  if (!user) { show("login"); return; }
+  unsubMe = onSnapshot(doc(db, "users", user.uid), s => {
+    banned = !!(s.exists() && s.data().banned);
+    if (banned) show("banned");
+    else if (!$("banned").classList.contains("hide")) openUsers();
+  });
+  openUsers();
+});
+
+function openUsers(){
+  if (unsubMsgs) { unsubMsgs(); unsubMsgs = null; }
+  peer = null;
+  show("users");
+  if (unsubUsers) return;
+  unsubUsers = onSnapshot(collection(db, "users"), snap => {
+    const list = $("list");
+    list.innerHTML = "";
+    snap.forEach(d => {
+      const u = d.data();
+      if (u.uid === me.uid || u.banned) return;
+      const div = document.createElement("div");
+      div.className = "user";
+      div.textContent = u.name;
+      div.onclick = () => openChat(u);
+      list.appendChild(div);
+    });
+    if (!list.children.length) list.innerHTML = '<p class="empty">Abhi koi dusra user nahi hai.</p>';
+  });
+}
+
+function chatIdFor(u){ return [me.uid, u.uid].sort().join("_"); }
+
+function openChat(u){
+  peer = u;
+  $("peername").textContent = u.name;
+  $("msgs").innerHTML = "";
+  show("chat");
+  const q = query(collection(db, "chats", chatIdFor(u), "messages"), orderBy("time"));
+  unsubMsgs = onSnapshot(q, snap => {
+    const box = $("msgs");
+    box.innerHTML = "";
+    snap.forEach(d => {
+      const m = d.data();
+      const div = document.createElement("div");
+      div.className = "msg " + (m.sender === me.uid ? "mine" : "theirs");
+      div.textContent = m.text;
+      box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+  });
+}
+
+$("back").onclick = openUsers;
+
+$("send").onclick = async () => {
+  const t = $("text").value.trim();
+  if (!t || !peer) return;
+  $("text").value = "";
+  try {
+    await addDoc(collection(db, "chats", chatIdFor(peer), "messages"),
+      { text: t, sender: me.uid, time: Date.now() });
+  } catch(e){ alert("Message nahi gaya: " + e.message); }
+};
+$("text").addEventListener("keydown", e => { if (e.key === "Enter") $("send").click(); });
+</script>
+</body>
+</html>
