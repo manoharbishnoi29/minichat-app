@@ -1,177 +1,106 @@
-<!DOCTYPE html>
-<html lang="hi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MiniChat</title>
+<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#075e54"><link rel="manifest" href="manifest.json"><title>MiniChat</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,sans-serif;background:#ece5dd}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#ece5dd}
 .hide{display:none!important}
-.screen{display:flex;flex-direction:column;height:100dvh;max-width:600px;margin:0 auto;background:#fff}
+.s{display:flex;flex-direction:column;height:100dvh;max-width:600px;margin:0 auto;background:#fff}
+#loading{align-items:center;justify-content:center}
 #login{justify-content:center;padding:24px;gap:10px}
-input{padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px}
+input{padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px;min-width:0}
 button{padding:12px 16px;border:0;border-radius:8px;background:#075e54;color:#fff;font-size:16px}
-button.alt{background:#fff;color:#075e54;border:1px solid #075e54}
+.alt{background:#fff;color:#075e54;border:1px solid #075e54}
 #err{color:#c00}
 header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#075e54;color:#fff}
-header b{flex:1}
 header button{background:none;padding:4px 8px}
+.hd{flex:1;display:flex;flex-direction:column;min-width:0}
+header .t{flex:1;font-weight:700}
+header small{opacity:.85;font-size:12px}
 #list{overflow:auto;flex:1}
-.user{padding:16px;border-bottom:1px solid #eee}
-.empty{padding:16px;color:#666}
+.u{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #eee}
+.av{width:46px;height:46px;border-radius:50%;background:#cfd8dc;display:flex;align-items:center;justify-content:center;font-weight:700;position:relative;flex:none}
+.av.on::after{content:"";position:absolute;right:0;bottom:0;width:12px;height:12px;border-radius:50%;background:#25d366;border:2px solid #fff}
+.mid{flex:1;min-width:0}
+.nm{font-weight:600}
+.pv{color:#667;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:12px;color:#889}
+.bd{min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center}
+.u.un{background:#f1fbf4}.u.un .nm,.u.un .pv{font-weight:700;color:#111}
 #msgs{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:6px;background:#ece5dd}
-.msg{max-width:78%;padding:8px 12px;border-radius:10px;word-wrap:break-word}
-.mine{align-self:flex-end;background:#dcf8c6}
-.theirs{align-self:flex-start;background:#fff}
-.bar{display:flex;gap:8px;padding:8px;background:#f0f0f0}
-.bar input{flex:1}
-#banned{padding:24px;justify-content:center}
-</style>
-</head>
-<body>
-
-<div id="login" class="screen">
-  <h1>MiniChat</h1>
-  <input id="name" placeholder="Naam (sirf signup ke liye)">
-  <input id="email" type="email" placeholder="Email">
-  <input id="pass" type="password" placeholder="Password (kam se kam 6 akshar)">
-  <button id="login-btn">Login</button>
-  <button id="signup" class="alt">Signup</button>
-  <p id="err"></p>
-</div>
-
-<div id="users" class="screen hide">
-  <header><b>Chats</b><button class="lo">Logout</button></header>
-  <div id="list"></div>
-</div>
-
-<div id="chat" class="screen hide">
-  <header><button id="back">←</button><b id="peername"></b></header>
-  <div id="msgs"></div>
-  <div class="bar"><input id="text" placeholder="Message"><button id="send">Send</button></div>
-</div>
-
-<div id="banned" class="screen hide">
-  <p>Aapka account block kar diya gaya hai.</p>
-  <button class="lo">Logout</button>
-</div>
-
+.m{max-width:78%;padding:6px 10px 4px;border-radius:10px;word-wrap:break-word}
+.m small{display:block;text-align:right;font-size:11px;color:#667}
+.me{align-self:flex-end;background:#dcf8c6}.th{align-self:flex-start;background:#fff}
+.m.nw{background:#fff8e1;box-shadow:0 0 0 2px #ffd54f}
+.m img{display:block;max-width:100%;min-width:140px;min-height:90px;background:#ddd;border-radius:8px}
+.bar{display:flex;gap:8px;padding:8px;background:#f0f0f0}.bar input{flex:1}
+#pb{background:#fff;color:#333;padding:10px 12px}
+#lb{position:fixed;inset:0;background:#000e;display:flex;align-items:center;justify-content:center;z-index:9}
+#lb img{max-width:100%;max-height:100%}
+</style></head><body>
+<div id="loading" class="s">Load ho raha hai...</div>
+<div id="login" class="s hide"><h1>MiniChat</h1><input id="name" placeholder="Naam (signup ke liye)"><input id="email" type="email" placeholder="Email"><input id="pass" type="password" placeholder="Password (6+ akshar)"><button id="lg">Login</button><button id="su" class="alt">Signup</button><p id="err"></p></div>
+<div id="users" class="s hide"><header><b class="t">Chats</b><button class="lo">Logout</button></header><div id="list"></div></div>
+<div id="chat" class="s hide"><header><button id="back">←</button><div class="hd"><b id="pn"></b><small id="ps"></small></div></header><div id="msgs"></div><div class="bar"><button id="pb">📷</button><input id="file" type="file" accept="image/*" class="hide"><input id="text" placeholder="Message"><button id="send">Send</button></div></div>
+<div id="banned" class="s hide"><p>Aapka account block kar diya gaya hai.</p><button class="lo">Logout</button></div>
+<div id="lb" class="hide"><img id="lbi" alt=""></div>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCwX7QKbhX_b_H2T69lSsp79w-3y0lS7HM",
-  authDomain: "minichat-898cd.firebaseapp.com",
-  projectId: "minichat-898cd",
-  storageBucket: "minichat-898cd.firebasestorage.app",
-  messagingSenderId: "500528822656",
-  appId: "1:500528822656:web:033b02144a983defe66965"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const $ = id => document.getElementById(id);
-
-let me = null, peer = null, banned = false;
-let unsubUsers = null, unsubMsgs = null, unsubMe = null;
-
-function show(id){
-  ["login","users","chat","banned"].forEach(s => $(s).classList.toggle("hide", s !== id));
-}
-function cleanup(){
-  [unsubUsers, unsubMsgs, unsubMe].forEach(u => u && u());
-  unsubUsers = unsubMsgs = unsubMe = null;
-  peer = null; banned = false;
-}
-
-$("login-btn").onclick = async () => {
-  try { await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value); }
-  catch(e){ $("err").textContent = e.message; }
-};
-
-$("signup").onclick = async () => {
-  try {
-    const email = $("email").value.trim();
-    const name = $("name").value.trim();
-    const r = await createUserWithEmailAndPassword(auth, email, $("pass").value);
-    await setDoc(doc(db, "users", r.user.uid),
-      { uid: r.user.uid, name: name || email, email, banned: false });
-  } catch(e){ $("err").textContent = e.message; }
-};
-
-document.querySelectorAll(".lo").forEach(b => b.onclick = () => signOut(auth));
-
-onAuthStateChanged(auth, user => {
-  cleanup();
-  me = user;
-  if (!user) { show("login"); return; }
-  unsubMe = onSnapshot(doc(db, "users", user.uid), s => {
-    banned = !!(s.exists() && s.data().banned);
-    if (banned) show("banned");
-    else if (!$("banned").classList.contains("hide")) openUsers();
-  });
-  openUsers();
-});
-
-function openUsers(){
-  if (unsubMsgs) { unsubMsgs(); unsubMsgs = null; }
-  peer = null;
-  show("users");
-  if (unsubUsers) return;
-  unsubUsers = onSnapshot(collection(db, "users"), snap => {
-    const list = $("list");
-    list.innerHTML = "";
-    snap.forEach(d => {
-      const u = d.data();
-      if (u.uid === me.uid || u.banned) return;
-      const div = document.createElement("div");
-      div.className = "user";
-      div.textContent = u.name;
-      div.onclick = () => openChat(u);
-      list.appendChild(div);
-    });
-    if (!list.children.length) list.innerHTML = '<p class="empty">Abhi koi dusra user nahi hai.</p>';
-  });
-}
-
-function chatIdFor(u){ return [me.uid, u.uid].sort().join("_"); }
-
-function openChat(u){
-  peer = u;
-  $("peername").textContent = u.name;
-  $("msgs").innerHTML = "";
-  show("chat");
-  const q = query(collection(db, "chats", chatIdFor(u), "messages"), orderBy("time"));
-  unsubMsgs = onSnapshot(q, snap => {
-    const box = $("msgs");
-    box.innerHTML = "";
-    snap.forEach(d => {
-      const m = d.data();
-      const div = document.createElement("div");
-      div.className = "msg " + (m.sender === me.uid ? "mine" : "theirs");
-      div.textContent = m.text;
-      box.appendChild(div);
-    });
-    box.scrollTop = box.scrollHeight;
-  });
-}
-
-$("back").onclick = openUsers;
-
-$("send").onclick = async () => {
-  const t = $("text").value.trim();
-  if (!t || !peer) return;
-  $("text").value = "";
-  try {
-    await addDoc(collection(db, "chats", chatIdFor(peer), "messages"),
-      { text: t, sender: me.uid, time: Date.now() });
-  } catch(e){ alert("Message nahi gaya: " + e.message); }
-};
-$("text").addEventListener("keydown", e => { if (e.key === "Enter") $("send").click(); });
-</script>
-</body>
-</html>
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,createUserWithEmailAndPassword as cu,signInWithEmailAndPassword as si,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import{initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,setDoc,getDoc,updateDoc,collection,addDoc,onSnapshot,query,orderBy,limit}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app=initializeApp({apiKey:"AIzaSyCwX7QKbhX_b_H2T69lSsp79w-3y0lS7HM",authDomain:"minichat-898cd.firebaseapp.com",projectId:"minichat-898cd",storageBucket:"minichat-898cd.firebasestorage.app",messagingSenderId:"500528822656",appId:"1:500528822656:web:033b02144a983defe66965"});
+const auth=getAuth(app),db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
+const $=i=>document.getElementById(i),mk=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e};
+const LS={g(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},s(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},d(k){try{localStorage.removeItem(k)}catch(e){}}};
+let me=null,peer=null,banned=false,uU=null,uM=null,uMe=null,users=new Map(),hb=null;
+const info=new Map(),pc=new Map();
+const cid=u=>[me.uid,u.uid].sort().join("_");
+const ft=t=>{const d=new Date(t),h=d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});return d.toDateString()==new Date().toDateString()?h:d.toLocaleDateString([],{day:"numeric",month:"short"})+", "+h};
+const on=u=>u&&u.online===true&&u.lastSeen&&Date.now()-u.lastSeen<100000;
+const st=u=>on(u)?"online":(u&&u.lastSeen?"last seen "+ft(u.lastSeen):"offline");
+const show=id=>["loading","login","users","chat","banned"].forEach(s=>$(s).classList.toggle("hide",s!=id));
+const beat=async o=>{if(!me)return;try{await updateDoc(doc(db,"users",me.uid),{online:o,lastSeen:Date.now()})}catch(e){}};
+const stopP=()=>{if(hb)clearInterval(hb);hb=null};
+const startP=()=>{stopP();beat(true);hb=setInterval(()=>{if(document.visibilityState=="visible")beat(true)},45000)};
+const pstat=()=>{if(peer)$("ps").textContent=st(users.get(peer.uid)||peer)};
+function clean(){[uU,uM,uMe].forEach(f=>f&&f());uU=uM=uMe=null;info.forEach(i=>i.u&&i.u());info.clear();users=new Map();stopP();peer=null;banned=false}
+document.addEventListener("visibilitychange",()=>{if(me&&!banned)beat(document.visibilityState=="visible")});
+addEventListener("pagehide",()=>beat(false));
+setInterval(()=>{if(me){render();pstat()}},30000);
+$("lg").onclick=async()=>{$("err").textContent="";try{await si(auth,$("email").value.trim(),$("pass").value)}catch(e){$("err").textContent=e.message}};
+$("su").onclick=async()=>{$("err").textContent="";try{const em=$("email").value.trim(),n=$("name").value.trim(),r=await cu(auth,em,$("pass").value);await setDoc(doc(db,"users",r.user.uid),{uid:r.user.uid,name:n||em,email:em,banned:false,online:true,lastSeen:Date.now()})}catch(e){$("err").textContent=e.message}};
+document.querySelectorAll(".lo").forEach(b=>b.onclick=async()=>{await beat(false);signOut(auth)});
+onAuthStateChanged(auth,u=>{clean();me=u;if(!u){LS.d("lp");show("login");return}
+const lp=LS.g("lp");
+uMe=onSnapshot(doc(db,"users",u.uid),s=>{banned=!!(s.exists()&&s.data().banned);if(banned){show("banned");stopP()}else if(!$("banned").classList.contains("hide")){openU();startP()}});
+openU();startP();if(lp&&lp.uid)openC(lp)});
+function sync(){const ids=new Set();users.forEach(u=>{if(u.uid!=me.uid&&!u.banned)ids.add(u.uid)});
+info.forEach((i,id)=>{if(!ids.has(id)){i.u&&i.u();info.delete(id)}});
+ids.forEach(id=>{if(info.has(id))return;const u=users.get(id),c=cid(u),i={u:null,pv:"",t:0,n:0};info.set(id,i);
+i.u=onSnapshot(query(collection(db,"chats",c,"messages"),orderBy("time","desc"),limit(20)),sn=>{const d=sn.docs.map(x=>x.data()),ra=Number(LS.g("r_"+c))||0;
+if(d.length){i.pv=(d[0].sender==me.uid?"Aap: ":"")+(d[0].text||"");i.t=d[0].time}else{i.pv="";i.t=0}
+i.n=d.filter(m=>m.sender!=me.uid&&m.time>ra).length;if(peer&&peer.uid==id)i.n=0;render()},()=>{})})}
+function render(){if(!me)return;const l=$("list");l.innerHTML="";
+const a=[...users.values()].filter(u=>u.uid!=me.uid&&!u.banned).sort((x,y)=>((info.get(y.uid)||{}).t||0)-((info.get(x.uid)||{}).t||0)||(x.name||"").localeCompare(y.name||""));
+if(!a.length){l.innerHTML='<p style="padding:16px">Abhi koi dusra user nahi hai.</p>';return}
+a.forEach(u=>{const i=info.get(u.uid)||{},r=mk("div","u"+(i.n?" un":"")),av=mk("div","av"+(on(u)?" on":"")),m=mk("div","mid"),nm=mk("div","nm"),pv=mk("div","pv"),rt=mk("div","r");
+av.textContent=(u.name||"?").trim().charAt(0).toUpperCase();nm.textContent=u.name||u.email;pv.textContent=i.pv||st(u);m.append(nm,pv);
+rt.textContent=i.t?ft(i.t):"";if(i.n){const b=mk("div","bd");b.textContent=i.n>=20?"20+":i.n;rt.append(b)}
+r.append(av,m,rt);r.onclick=()=>openC(u);l.append(r)})}
+function openU(){if(uM){uM();uM=null}peer=null;LS.d("lp");show("users");
+if(!uU)uU=onSnapshot(collection(db,"users"),sn=>{users=new Map();sn.forEach(d=>users.set(d.id,d.data()));sync();render();pstat()});render()}
+async function lph(c,p,img){const k=c+"/"+p;if(pc.has(k)){img.src=pc.get(k);return}try{const s=await getDoc(doc(db,"chats",c,"photos",p));if(s.exists()){pc.set(k,s.data().data);img.src=s.data().data}}catch(e){}}
+function openC(u){if(uM){uM();uM=null}peer=u;LS.s("lp",{uid:u.uid,name:u.name});history.pushState({c:1},"");
+const c=cid(u),ro=Number(LS.g("r_"+c))||0;$("pn").textContent=u.name;$("msgs").innerHTML="";show("chat");pstat();
+uM=onSnapshot(query(collection(db,"chats",c,"messages"),orderBy("time")),sn=>{const b=$("msgs");b.innerHTML="";let lt=0;
+sn.forEach(d=>{const m=d.data(),mine=m.sender==me.uid,v=mk("div","m "+(mine?"me":"th")+(!mine&&m.time>ro?" nw":""));
+if(m.photoId){const im=mk("img");lph(c,m.photoId,im);im.onclick=()=>{if(im.src){$("lbi").src=im.src;$("lb").classList.remove("hide")}};v.append(im)}else{const t=mk("div");t.textContent=m.text;v.append(t)}
+const tm=mk("small");tm.textContent=ft(m.time);v.append(tm);b.append(v);if(m.time>lt)lt=m.time});
+b.scrollTop=b.scrollHeight;if(lt)LS.s("r_"+c,lt);const i=info.get(u.uid);if(i)i.n=0})}
+$("back").onclick=()=>{if(history.state&&history.state.c)history.back();else openU()};
+addEventListener("popstate",()=>{if(peer)openU()});
+$("lb").onclick=()=>$("lb").classList.add("hide");
+$("send").onclick=async()=>{const t=$("text").value.trim();if(!t||!peer)return;$("text").value="";try{await addDoc(collection(db,"chats",cid(peer),"messages"),{text:t,sender:me.uid,time:Date.now()})}catch(e){alert("Message nahi gaya: "+e.message)}};
+$("text").addEventListener("keydown",e=>{if(e.key=="Enter")$("send").click()});
+const cmp=f=>new Promise((ok,no)=>{const im=new Image(),u=URL.createObjectURL(f);im.onload=()=>{const s=Math.min(1,800/Math.max(im.width,im.height)),w=Math.round(im.width*s),h=Math.round(im.height*s),c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);URL.revokeObjectURL(u);let d=c.toDataURL("image/jpeg",.6);if(d.length>800000)d=c.toDataURL("image/jpeg",.4);ok(d)};im.onerror=()=>no(new Error("Photo khul nahi payi"));im.src=u});
+$("pb").onclick=()=>$("file").click();
+$("file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f||!peer)return;try{const d=await cmp(f);if(d.length>900000)throw new Error("Photo bahut badi hai");const c=cid(peer),p=await addDoc(collection(db,"chats",c,"photos"),{data:d,sender:me.uid,time:Date.now()});await addDoc(collection(db,"chats",c,"messages"),{text:"📷 Photo",photoId:p.id,sender:me.uid,time:Date.now()})}catch(x){alert("Photo nahi gayi: "+x.message)}};
+if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+</script></body></html>
